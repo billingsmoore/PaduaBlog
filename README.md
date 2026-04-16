@@ -2,7 +2,9 @@
 
 I'm unfortunately unable to attend the Buddhism and machine translation workshop in Padua because of a family emergency. But hope to be participating as much as possible from a distance. In lieu of the out-of-session chats that I suspect will be the most interesting part of the conference, I'll be putting some (unasked for) thoughts here for anyone who might (foolishly) want my opinion as things go on.
 
-These will be rough, half-baked thoughts of the kind that might be brought up in conversation over lunch -- not well-researched, or deeply considered opinion pieces, but hopefully will be of some use to someone.
+These will be rough, half-baked thoughts of the kind that might be brought up in conversation over lunch -- not well-researched, or deeply considered opinion pieces, but hopefully will be of some use to someone. I'll also put links here for things as they come up during the conference.
+
+Here's where you can find aggregated benchmark results for Tibetan-language AI applications: https://huggingface.co/spaces/billingsmoore/tibetan-leaderboard
 
 ## Reflection on the Opening Session
 
