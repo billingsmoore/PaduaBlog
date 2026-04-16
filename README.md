@@ -10,7 +10,7 @@ These will be rough, half-baked thoughts of the kind that might be brought up in
 
 If AI is human-like, what can it do in the way of teaching? Can we have an AI guru? This is the framing that seems to be most interesting, and controversial, for folks. But, gurus do not need to be human-like, and we may find it instructive to consider the things that are not humans but that are recognized as valid teachers.
 
-As Michael Sheehy pointed out, the tradition (at least in places) recognizes that all appearances are the guru. Is our skepticism to AI gurus a failure of pure vision? 
+As Michael Sheehy pointed out, the tradition (at least in places) recognizes that all appearances are the guru. Is our skepticism toward AI a failure of pure vision? 
 
 Garchen Rinpoche offers teachings and empowerments by livestream and by recording. He often describes video recordings as being a samboghakaya of the guru. If a video can be a samboghakaya, what else might be? Where are the lines and why do they land there?
 
