@@ -6,7 +6,7 @@ These will be rough, half-baked thoughts of the kind that might be brought up in
 
 Here's where you can find aggregated benchmark results for Tibetan-language AI applications: https://huggingface.co/spaces/billingsmoore/tibetan-leaderboard
 
-Reflections are in reverse-chronological order so the most recent sessions are at the top.
+Reflections are in reverse-chronological order so the most recent sessions are at the top. Linked slides are in either .pptx or .html format. HTML can be opened in our browser for viewing.
 
 ## Reflections on Day 2 - Agents, Evaluations, Archives
 
@@ -22,7 +22,7 @@ Greg’s approach relies on a pretty large number of agents and sub-agents. If I
 
 The broad design pattern, known as a “Second Brain” is a popular one, though, and you can learn more about it online. This video presents how to set up a similar system for yourself. These are very cool systems, though their complexity can be intimidating. The complexity can be necessary, if you are working on material like Greg’s where there are regularly Tibetan, Sanskrit, and Chinese witnesses as well as commentaries to be compared and cross-referenced. 
 
-On the KVP side, I presented on our Translation and Editor agents and gave a bit of a deep-dive on their design and the quality benefits of particular tools and prompt designs in those agents. [You can find the slides from that presentation here.] One of the core drivers of that work has been staying as lean and efficient as possible. This not only reduces short term costs, but also responds to broader concerns about reliance on the large AI models produced by corporate tech companies. We are keen to ensure that anywhere that AI is appearing in our workflow its impact is validated by evidence and that each additional step brings measurable benefit.
+On the KVP side, I presented on our Translation and Editor agents and gave a bit of a deep-dive on their design and the quality benefits of particular tools and prompt designs in those agents. [You can find the Translation Agent slides from that presentation here.](/slides/TranslationAgentSlides.html) [And the slides for the Editor Agent are here.](/slides/EditorAgentSlides.html) One of the core drivers of that work has been staying as lean and efficient as possible. This not only reduces short term costs, but also responds to broader concerns about reliance on the large AI models produced by corporate tech companies. We are keen to ensure that anywhere that AI is appearing in our workflow its impact is validated by evidence and that each additional step brings measurable benefit.
 
 The KVP approach is also importantly aligned with the existing translation workflow there. KVP has an in-house Translation team that produces and reviews drafts before sending them to the Editorial team for more high-level review and quality feedback. This segments the quality control process into multiple specialized steps across basic translation correctness, grammatical mechanics, stylistic quality, etc. and our approach with AI is in support of that process, rather than aiming at an end-to-end AI system.
 
@@ -53,11 +53,11 @@ Instead, we need a “reference-free” metric. This can be done for many langua
 
 Recently, researchers have had significant success asking LLMs to rate translation quality, and at least a couple LLMs are reasonably good with Tibetan, so that seemed like a good path forward.
 
-At KVP we collected samples of human evaluation of translations from some of our translators and tested several evaluation methods to see which one agreed most closely with the human assessments. The winner was the LLM method using Gemini. [The slides  from this portion can be found here.]
+At KVP we collected samples of human evaluation of translations from some of our translators and tested several evaluation methods to see which one agreed most closely with the human assessments. The winner was the LLM method using Gemini. [The slides  from this portion can be found here.](/slides/TQE-slides/slides.html)
 
-Gemini’s outputs were then made more consistent and more reliable by optimizing the prompt, as well as altering things like the model temperature, the amount of “thinking”, the number of times we prompt the model, etc. This process brings Gemini into a level of agreement with human assessments that rivals the level agreement between human evaluators. [The slides  from this portion can be found here.]
+Gemini’s outputs were then made more consistent and more reliable by optimizing the prompt, as well as altering things like the model temperature, the amount of “thinking”, the number of times we prompt the model, etc. This process brings Gemini into a level of agreement with human assessments that rivals the level agreement between human evaluators. [The slides  from this portion can be found here.](/slides/TQE-slides/GEMBAOptimizationslides.html)
 
-Once Gemini had been dialed in, we then used Gemini to produce a larger set of example evaluations and we were able to use that as training data to finetune a much smaller model that can be run on low-cost hardware like a laptop. On a 5-point scale (“Rate this translation on a scale of 1-5”) this small model is within 1 point of human assessments 80% of the time. This is less accurate than Gemini, but also much less expensive to run. There are trade-offs in model size. [The slides  from this portion can be found here.]
+Once Gemini had been dialed in, we then used Gemini to produce a larger set of example evaluations and we were able to use that as training data to finetune a much smaller model that can be run on low-cost hardware like a laptop. On a 5-point scale (“Rate this translation on a scale of 1-5”) this small model is within 1 point of human assessments 80% of the time. This is less accurate than Gemini, but also much less expensive to run. There are trade-offs in model size. [The slides  from this portion can be found here.](/slides/TQE-slides/deck.html)
 
 #### A Broader Discussion
 
@@ -75,7 +75,7 @@ Again, this points to the value of modularity and a certain sort of pluralism in
 
 ### Garchen Archive
 
-Parallel to all of this, I also presented some of how AI is being used in the Garchen Archive. [You can see the slides from this presentation here.]
+Parallel to all of this, I also presented some of how AI is being used in the Garchen Archive. [You can see the slides from this presentation here.](/slides/ArchiveAI%20presentation.pptx)
 
 This is exciting work to me because it’s a place where we are actively working to archive and disseminate the living tradition. This comes with some interesting challenges: working with video and audio of varying qualities; working with a speaker with a unique accent whose voice has changed over time; and working with a set of data that is actively growing as Garchen Rinpoche continues to deliver public teachings.
 

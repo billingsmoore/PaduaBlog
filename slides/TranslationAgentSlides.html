@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tibetan–English Translation Agent: Findings</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: #0f1117;
+    color: #e8e8e8;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #deck {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .slide {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    padding: 48px 64px 32px;
+    height: 100%;
+  }
+
+  .slide.active {
+    display: flex;
+  }
+
+  .slide-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #5a7a9a;
+    margin-bottom: 12px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .claim {
+    font-size: clamp(20px, 2.8vw, 32px);
+    font-weight: 400;
+    line-height: 1.3;
+    color: #f0f0f0;
+    margin-bottom: 28px;
+    max-width: 820px;
+  }
+
+  .claim em {
+    color: #7eb8d4;
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .chart-wrapper {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+  }
+
+  .chart-wrapper canvas {
+    max-height: 100%;
+  }
+
+  .evidence-note {
+    font-size: 12px;
+    color: #607080;
+    margin-top: 14px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  /* Title slide */
+  #slide-0 {
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  #slide-0 .title-eyebrow {
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #5a7a9a;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 24px;
+  }
+
+  #slide-0 h1 {
+    font-size: clamp(28px, 4vw, 54px);
+    font-weight: 400;
+    line-height: 1.2;
+    color: #f0f0f0;
+    margin-bottom: 20px;
+    max-width: 800px;
+  }
+
+  #slide-0 .subtitle {
+    font-size: 16px;
+    color: #7a9ab4;
+    margin-bottom: 40px;
+    max-width: 560px;
+    line-height: 1.6;
+  }
+
+  #slide-0 .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, auto);
+    gap: 40px;
+    margin-top: 12px;
+  }
+
+  #slide-0 .meta-item .meta-val {
+    font-size: 26px;
+    font-weight: 300;
+    color: #7eb8d4;
+    font-family: 'Courier New', monospace;
+  }
+
+  #slide-0 .meta-item .meta-key {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #506070;
+    margin-top: 4px;
+  }
+
+  /* Nav */
+  #nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 64px;
+    border-top: 1px solid #1e2530;
+    flex-shrink: 0;
+  }
+
+  #nav button {
+    background: none;
+    border: 1px solid #2a3545;
+    color: #8090a0;
+    padding: 8px 22px;
+    font-size: 13px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  #nav button:hover:not(:disabled) {
+    border-color: #7eb8d4;
+    color: #7eb8d4;
+  }
+
+  #nav button:disabled {
+    opacity: 0.2;
+    cursor: default;
+  }
+
+  #progress {
+    font-size: 12px;
+    color: #506070;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.1em;
+  }
+
+  .dot-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2a3545;
+    transition: background 0.2s;
+  }
+
+  .dot.active {
+    background: #7eb8d4;
+  }
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- Slide 0: Title -->
+  <div class="slide active" id="slide-0">
+    <div class="title-eyebrow">Technical Report — 4 Studies · n=100 per study</div>
+    <h1>Tibetan–English Translation Agent</h1>
+    <p class="subtitle">How a domain glossary, translation memory, review pass, and inference scaling affect translation quality — and under what conditions.</p>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <div class="meta-val">4</div>
+        <div class="meta-key">studies</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-val">0–100</div>
+        <div class="meta-key">scoring scale</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-val">Gemini<br>2.0 Flash</div>
+        <div class="meta-key">model</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-val">Wilcoxon<br>α=0.05</div>
+        <div class="meta-key">stat test</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 1 -->
+  <div class="slide" id="slide-1">
+    <div class="slide-label">Study 1 — Easy Inputs</div>
+    <div class="claim">When baseline quality is already high, <em>no augmentation moves the average.</em></div>
+    <div class="chart-wrapper">
+      <canvas id="chart1"></canvas>
+    </div>
+    <div class="evidence-note">All p-values > 0.05 · Baseline mean: 90.10 · Ceiling effect: insufficient headroom for improvement</div>
+  </div>
+
+  <!-- Slide 2 -->
+  <div class="slide" id="slide-2">
+    <div class="slide-label">Study 1 — Easy Inputs · Quality Band Distribution</div>
+    <div class="claim">Even on easy text, the glossary is the <em>only tool that prevents catastrophic failures.</em></div>
+    <div class="chart-wrapper">
+      <canvas id="chart2"></canvas>
+    </div>
+    <div class="evidence-note">Baseline min score: 30 · Glossary min score: 78 · Glossary is the only condition with zero sub-75 outputs</div>
+  </div>
+
+  <!-- Slide 3 -->
+  <div class="slide" id="slide-3">
+    <div class="slide-label">Study 2 — Hard Inputs</div>
+    <div class="claim">On difficult text, <em>every augmentation raises quality by ~26 points</em> — a 38% improvement over baseline.</div>
+    <div class="chart-wrapper">
+      <canvas id="chart3"></canvas>
+    </div>
+    <div class="evidence-note">All augmented conditions: p &lt; 0.0001 · Effect size ≈ 25 pts · Hard test set: sentences where baseline scored &lt; 75</div>
+  </div>
+
+  <!-- Slide 4 -->
+  <div class="slide" id="slide-4">
+    <div class="slide-label">Study 2 — Hard Inputs · Quality Band Distribution</div>
+    <div class="claim">The glossary <em>eliminates critical failures</em> entirely. Combining all tools produces the most.</div>
+    <div class="chart-wrapper">
+      <canvas id="chart4"></canvas>
+    </div>
+    <div class="evidence-note">Baseline: 24 critical failures (&lt;50) · Glossary only: 0 · All interventions: 3 — worse than any single tool</div>
+  </div>
+
+  <!-- Slide 5 -->
+  <div class="slide" id="slide-5">
+    <div class="slide-label">Study 2 — Hard Inputs · Mean vs. Variance</div>
+    <div class="claim">The glossary has the <em>highest mean and lowest variance</em> of any condition. Stacking all tools is the weakest approach.</div>
+    <div class="chart-wrapper">
+      <canvas id="chart5"></canvas>
+    </div>
+    <div class="evidence-note">Lower SD = more predictable quality · Glossary SD: 8.02 · All interventions SD: 13.63</div>
+  </div>
+
+  <!-- Slide 6 -->
+  <div class="slide" id="slide-6">
+    <div class="slide-label">Study 3 — Inference Scaling (Best-of-N)</div>
+    <div class="claim">Translating twice <em>captures 58% of the total gain</em> from translating five times.</div>
+    <div class="chart-wrapper">
+      <canvas id="chart6"></canvas>
+    </div>
+    <div class="evidence-note">N=1→2: +5.26 pts · N=2→3: +2.27 pts · N=3→5: +1.46 pts combined · All steps p &lt; 0.003</div>
+  </div>
+
+  <!-- Slide 7 -->
+  <div class="slide" id="slide-7">
+    <div class="slide-label">Study 4 — Translation Memory Size</div>
+    <div class="claim">A single in-domain example is <em>as effective as a corpus of 50,000.</em></div>
+    <div class="chart-wrapper">
+      <canvas id="chart7"></canvas>
+    </div>
+    <div class="evidence-note">Every TM size vs. baseline: p &lt; 0.0001 · No adjacent TM size comparison reached significance · All TM conditions within a 1.6-pt band</div>
+  </div>
+
+  <!-- Slide 8 -->
+  <div class="slide" id="slide-8">
+    <div class="slide-label">Cross-Study Finding</div>
+    <div class="claim">Every strategy — tools, scaling, memory — <em>hits the same ceiling near 82–84.</em> The bottleneck is the base model.</div>
+    <div class="chart-wrapper">
+      <canvas id="chart8"></canvas>
+    </div>
+    <div class="evidence-note">Glossary (Study 2): 82.81 · Best-of-5 (Study 3): 84.47 · Best TM size (Study 4): 82.44 · Independent mechanisms, same ceiling</div>
+  </div>
+
+</div>
+
+<!-- Nav -->
+<div id="nav">
+  <button id="btn-prev" disabled>← Prev</button>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+    <div class="dot-row" id="dots"></div>
+    <div id="progress">1 / 9</div>
+  </div>
+  <button id="btn-next">Next →</button>
+</div>
+
+<script>
+const TOTAL = 9;
+let current = 0;
+
+// ── palette ──────────────────────────────────────────────────────────────
+const C = {
+  baseline:  '#4a6070',
+  glossary:  '#7eb8d4',
+  tm:        '#6aaa88',
+  review:    '#c4a45a',
+  all:       '#b46a6a',
+  highlight: '#7eb8d4',
+  muted:     '#2a3545',
+  grid:      '#1e2530',
+  text:      '#909aaa',
+  band0:     '#8b3a3a',
+  band1:     '#7a6a40',
+  band2:     '#3a5a7a',
+  band3:     '#3a6a5a',
+  band4:     '#2a5040',
+};
+
+const DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      labels: { color: C.text, font: { size: 12, family: 'Courier New' }, boxWidth: 12, padding: 18 }
+    },
+    tooltip: {
+      backgroundColor: '#1a2230',
+      titleColor: '#e0e8f0',
+      bodyColor: '#a0b0c0',
+      borderColor: '#2a3a50',
+      borderWidth: 1,
+    }
+  },
+  scales: {
+    x: {
+      ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+      grid: { color: C.grid },
+      border: { color: C.grid }
+    },
+    y: {
+      ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+      grid: { color: C.grid },
+      border: { color: C.grid }
+    }
+  }
+};
+
+function mergeDeep(target, source) {
+  const out = Object.assign({}, target);
+  for (const key in source) {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      out[key] = mergeDeep(target[key] || {}, source[key]);
+    } else {
+      out[key] = source[key];
+    }
+  }
+  return out;
+}
+
+function opts(extra) { return mergeDeep(DEFAULTS, extra || {}); }
+
+const labels5 = ['Baseline', 'Glossary only', 'TM only', 'Review only', 'All tools'];
+const colors5 = [C.baseline, C.glossary, C.tm, C.review, C.all];
+
+// Chart 1 — Study 1 means
+new Chart(document.getElementById('chart1'), {
+  type: 'bar',
+  data: {
+    labels: labels5,
+    datasets: [{
+      label: 'Mean score (0–100)',
+      data: [90.10, 90.44, 90.31, 90.35, 90.17],
+      backgroundColor: colors5,
+      borderRadius: 3,
+    }]
+  },
+  options: opts({
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        min: 85, max: 92,
+        ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+        grid: { color: C.grid }, border: { color: C.grid },
+        title: { display: true, text: 'Mean score', color: C.text, font: { size: 12 } }
+      },
+      x: {
+        ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+        grid: { color: C.grid }, border: { color: C.grid }
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      annotation: {}
+    }
+  })
+});
+
+// Chart 2 — Study 1 quality bands (stacked)
+new Chart(document.getElementById('chart2'), {
+  type: 'bar',
+  data: {
+    labels: labels5,
+    datasets: [
+      { label: '< 75  (failures)', data: [1, 0, 2, 1, 2], backgroundColor: C.band0, borderRadius: 0 },
+      { label: '75–84', data: [3, 2, 1, 0, 2], backgroundColor: C.band1, borderRadius: 0 },
+      { label: '85–94', data: [67, 68, 65, 67, 63], backgroundColor: C.band3, borderRadius: 0 },
+      { label: '95–100', data: [29, 30, 32, 32, 33], backgroundColor: C.band4, borderRadius: 0 },
+    ]
+  },
+  options: opts({
+    scales: {
+      x: { stacked: true, ticks: { color: C.text, font: { size: 12, family: 'Courier New' } }, grid: { color: C.grid }, border: { color: C.grid } },
+      y: { stacked: true, max: 100, title: { display: true, text: 'Sentences (n=100)', color: C.text, font: { size: 12 } }, ticks: { color: C.text, font: { size: 12, family: 'Courier New' } }, grid: { color: C.grid }, border: { color: C.grid } }
+    },
+    plugins: { legend: { labels: { color: C.text, font: { size: 12, family: 'Courier New' }, boxWidth: 12, padding: 18 } } }
+  })
+});
+
+// Chart 3 — Study 2 means
+new Chart(document.getElementById('chart3'), {
+  type: 'bar',
+  data: {
+    labels: labels5,
+    datasets: [{
+      label: 'Mean score (0–100)',
+      data: [56.83, 82.81, 82.37, 81.83, 80.81],
+      backgroundColor: colors5,
+      borderRadius: 3,
+    }]
+  },
+  options: opts({
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        min: 0, max: 100,
+        ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+        grid: { color: C.grid }, border: { color: C.grid },
+        title: { display: true, text: 'Mean score', color: C.text, font: { size: 12 } }
+      },
+      x: { ticks: { color: C.text, font: { size: 12, family: 'Courier New' } }, grid: { color: C.grid }, border: { color: C.grid } }
+    }
+  })
+});
+
+// Chart 4 — Study 2 quality bands
+new Chart(document.getElementById('chart4'), {
+  type: 'bar',
+  data: {
+    labels: labels5,
+    datasets: [
+      { label: '< 50  (critical)',  data: [24, 0, 2, 2, 3],  backgroundColor: C.band0 },
+      { label: '50–74',             data: [76, 10, 7, 12, 13], backgroundColor: C.band1 },
+      { label: '75–84',             data: [0, 35, 26, 23, 23], backgroundColor: C.band2 },
+      { label: '85–94',             data: [0, 49, 60, 56, 56], backgroundColor: C.band3 },
+      { label: '95–100',            data: [0, 6, 5, 7, 5],    backgroundColor: C.band4 },
+    ]
+  },
+  options: opts({
+    scales: {
+      x: { stacked: true, ticks: { color: C.text, font: { size: 12, family: 'Courier New' } }, grid: { color: C.grid }, border: { color: C.grid } },
+      y: { stacked: true, max: 100, title: { display: true, text: 'Sentences (n=100)', color: C.text, font: { size: 12 } }, ticks: { color: C.text, font: { size: 12, family: 'Courier New' } }, grid: { color: C.grid }, border: { color: C.grid } }
+    },
+    plugins: { legend: { labels: { color: C.text, font: { size: 12, family: 'Courier New' }, boxWidth: 12, padding: 16 } } }
+  })
+});
+
+// Chart 5 — Study 2 mean ± SD (scatter with error bars via point + line workaround)
+// Use a grouped bar: one series for mean, one for SD shown as error via floating bars
+new Chart(document.getElementById('chart5'), {
+  type: 'bar',
+  data: {
+    labels: labels5,
+    datasets: [
+      {
+        label: 'Mean score',
+        data: [56.83, 82.81, 82.37, 81.83, 80.81],
+        backgroundColor: colors5,
+        borderRadius: 3,
+        yAxisID: 'y',
+      },
+      {
+        label: 'Std deviation (SD)',
+        data: [18.02, 8.02, 11.99, 12.38, 13.63],
+        backgroundColor: colors5.map(c => c + '66'),
+        borderColor: colors5,
+        borderWidth: 1,
+        borderRadius: 3,
+        yAxisID: 'y2',
+      }
+    ]
+  },
+  options: opts({
+    scales: {
+      y: {
+        min: 0, max: 100,
+        position: 'left',
+        title: { display: true, text: 'Mean score', color: C.text, font: { size: 12 } },
+        ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+        grid: { color: C.grid }, border: { color: C.grid }
+      },
+      y2: {
+        min: 0, max: 25,
+        position: 'right',
+        title: { display: true, text: 'Std deviation', color: C.text, font: { size: 12 } },
+        ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+        grid: { drawOnChartArea: false, color: C.grid }, border: { color: C.grid }
+      },
+      x: { ticks: { color: C.text, font: { size: 12, family: 'Courier New' } }, grid: { color: C.grid }, border: { color: C.grid } }
+    },
+    plugins: { legend: { labels: { color: C.text, font: { size: 12, family: 'Courier New' }, boxWidth: 12, padding: 18 } } }
+  })
+});
+
+// Chart 6 — Best-of-N (line + marginal gain bar)
+new Chart(document.getElementById('chart6'), {
+  type: 'line',
+  data: {
+    labels: ['N=1', 'N=2', 'N=3', 'N=4', 'N=5'],
+    datasets: [
+      {
+        label: 'Best-of-N mean score',
+        data: [75.48, 80.74, 83.01, 83.65, 84.47],
+        borderColor: C.highlight,
+        backgroundColor: C.highlight + '22',
+        pointBackgroundColor: C.highlight,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        tension: 0.3,
+        fill: true,
+        yAxisID: 'y',
+      },
+      {
+        label: 'Marginal gain vs. N−1',
+        data: [null, 5.26, 2.27, 0.64, 0.82],
+        borderColor: C.review,
+        backgroundColor: C.review + '44',
+        pointBackgroundColor: C.review,
+        pointRadius: 5,
+        type: 'bar',
+        yAxisID: 'y2',
+        borderRadius: 3,
+      }
+    ]
+  },
+  options: opts({
+    scales: {
+      y: {
+        min: 60, max: 90,
+        position: 'left',
+        title: { display: true, text: 'Mean score', color: C.text, font: { size: 12 } },
+        ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+        grid: { color: C.grid }, border: { color: C.grid }
+      },
+      y2: {
+        min: 0, max: 8,
+        position: 'right',
+        title: { display: true, text: 'Marginal gain (pts)', color: C.text, font: { size: 12 } },
+        ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+        grid: { drawOnChartArea: false, color: C.grid }, border: { color: C.grid }
+      },
+      x: { ticks: { color: C.text, font: { size: 12, family: 'Courier New' } }, grid: { color: C.grid }, border: { color: C.grid } }
+    },
+    plugins: { legend: { labels: { color: C.text, font: { size: 12, family: 'Courier New' }, boxWidth: 12, padding: 18 } } }
+  })
+});
+
+// Chart 7 — TM size
+new Chart(document.getElementById('chart7'), {
+  type: 'bar',
+  data: {
+    labels: ['No TM\n(0)', '1 entry', '100 entries', '1,000 entries', '10,000 entries', '50,000 entries'],
+    datasets: [{
+      label: 'Mean score',
+      data: [72.92, 81.14, 82.44, 82.08, 82.10, 80.85],
+      backgroundColor: [C.baseline, C.glossary, C.glossary+'cc', C.glossary+'aa', C.glossary+'88', C.glossary+'66'],
+      borderRadius: 3,
+    }]
+  },
+  options: opts({
+    plugins: { legend: { display: false } },
+    scales: {
+      y: {
+        min: 60, max: 88,
+        title: { display: true, text: 'Mean score', color: C.text, font: { size: 12 } },
+        ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+        grid: { color: C.grid }, border: { color: C.grid }
+      },
+      x: { ticks: { color: C.text, font: { size: 12, family: 'Courier New' } }, grid: { color: C.grid }, border: { color: C.grid } }
+    }
+  })
+});
+
+// Chart 8 — Ceiling convergence
+new Chart(document.getElementById('chart8'), {
+  type: 'bar',
+  data: {
+    labels: [
+      'Study 1\nBaseline\n(easy)',
+      'Study 2\nGlossary only\n(hard)',
+      'Study 2\nBest augmented\nmean',
+      'Study 3\nBest-of-2\n(hard)',
+      'Study 3\nBest-of-5\n(hard)',
+      'Study 4\nBest TM size\n(hard)',
+    ],
+    datasets: [{
+      label: 'Mean score',
+      data: [90.10, 82.81, 82.81, 80.74, 84.47, 82.44],
+      backgroundColor: [C.baseline, C.glossary, C.glossary, C.highlight+'88', C.highlight, C.tm],
+      borderRadius: 3,
+    }]
+  },
+  options: opts({
+    plugins: {
+      legend: { display: false },
+      annotation: {}
+    },
+    scales: {
+      y: {
+        min: 55, max: 95,
+        title: { display: true, text: 'Mean score', color: C.text, font: { size: 12 } },
+        ticks: { color: C.text, font: { size: 12, family: 'Courier New' } },
+        grid: { color: C.grid }, border: { color: C.grid }
+      },
+      x: { ticks: { color: C.text, font: { size: 12, family: 'Courier New' } }, grid: { color: C.grid }, border: { color: C.grid } }
+    }
+  })
+});
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+const slides = document.querySelectorAll('.slide');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+const progressEl = document.getElementById('progress');
+const dotsEl = document.getElementById('dots');
+
+// Build dots
+for (let i = 0; i < TOTAL; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  dotsEl.appendChild(d);
+}
+
+function goTo(n) {
+  slides[current].classList.remove('active');
+  dotsEl.children[current].classList.remove('active');
+  current = n;
+  slides[current].classList.add('active');
+  dotsEl.children[current].classList.add('active');
+  progressEl.textContent = (current + 1) + ' / ' + TOTAL;
+  btnPrev.disabled = current === 0;
+  btnNext.disabled = current === TOTAL - 1;
+}
+
+btnPrev.addEventListener('click', () => { if (current > 0) goTo(current - 1); });
+btnNext.addEventListener('click', () => { if (current < TOTAL - 1) goTo(current + 1); });
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { if (current < TOTAL - 1) goTo(current + 1); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { if (current > 0) goTo(current - 1); }
+});
+</script>
+</body>
+</html>
