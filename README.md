@@ -6,6 +6,84 @@ These will be rough, half-baked thoughts of the kind that might be brought up in
 
 Here's where you can find aggregated benchmark results for Tibetan-language AI applications: https://huggingface.co/spaces/billingsmoore/tibetan-leaderboard
 
+Reflections are in reverse-chronological order so the most recent sessions are at the top.
+
+## Reflections on Day 2 - Agents, Evaluations, Archives
+
+I was luckily able to attend a couple of the unconference sessions today. The first was focused on agentic AI. We got to see what Greg Forgues from Tsadra has been working on, and I presented the agentic work that we’ve been doing at the Khyentse Vision Project. In the second, I presented some of the work that I’ve been doing for the Garchen Archive to archive Garchen Rinpoche’s teachings from video and audio format, and then covered some of the translation quality review work being done at KVP.
+
+In this post, I will recap (with some editorializing) both conversations out of chronological order because I think there is enough overlap that it makes more sense to organize things into a more coherent arc. My goal is to give an overview of the sessions for those who weren’t in attendance, and to extrapolate what lessons might be available here.
+
+### Agentic Systems
+
+The agentic session brought to light some really interesting work, and I think the differences in what’s being done reflect some of the differences in workflow across organizations, and the corpora that they are working with.
+
+Greg’s approach relies on a pretty large number of agents and sub-agents. If I recall correctly, it was north of 14 or so for translation. These agents draw from a variety of data sources from S3 buckets to Neo4j graphs and then interact based on all of that. It’s a really complex system and I’m very much looking forward to a fuller write up of the details. He also invited folks to email him with any questions. I’ll omit his contact info here in case this page is crawled by spammers, but I’m sure you can grab his email address from someone.
+
+The broad design pattern, known as a “Second Brain” is a popular one, though, and you can learn more about it online. This video presents how to set up a similar system for yourself. These are very cool systems, though their complexity can be intimidating. The complexity can be necessary, if you are working on material like Greg’s where there are regularly Tibetan, Sanskrit, and Chinese witnesses as well as commentaries to be compared and cross-referenced. 
+
+On the KVP side, I presented on our Translation and Editor agents and gave a bit of a deep-dive on their design and the quality benefits of particular tools and prompt designs in those agents. [You can find the slides from that presentation here.] One of the core drivers of that work has been staying as lean and efficient as possible. This not only reduces short term costs, but also responds to broader concerns about reliance on the large AI models produced by corporate tech companies. We are keen to ensure that anywhere that AI is appearing in our workflow its impact is validated by evidence and that each additional step brings measurable benefit.
+
+The KVP approach is also importantly aligned with the existing translation workflow there. KVP has an in-house Translation team that produces and reviews drafts before sending them to the Editorial team for more high-level review and quality feedback. This segments the quality control process into multiple specialized steps across basic translation correctness, grammatical mechanics, stylistic quality, etc. and our approach with AI is in support of that process, rather than aiming at an end-to-end AI system.
+
+Our Translation agent is tasked with producing a drafted translation of a segment of a text with the goal being an output that has strict fidelity to the underlying Tibetan meaning. It is equipped with a glossary, a translation memory database, and a review tool to check its work (discussed at length below).
+
+Our Editor agent is tasked with catching high-level grammatical, formatting, and stylistic errors and providing suggested fixes. It also catches terminological issues and semantic issues and flags them for human editors. This is done in separate passes with distinct tiers, so that different types of issues can be addressed in different ways as defined by internal standards.
+
+These agents are intended to reflect and assist the Translation  - Editorial distinction in our workflow and are designed around the needs and standards of those teams. Other organizations often commission a translation from a translator who works on their own and then submits a manuscript for review and publication. These translators and organizations may prefer a more end-to-end approach, or they may prefer to use or not use pieces of a larger pipeline. Maybe they’d like something that helps correct grammatical mistakes, but would find an AI suggesting terminological changes to be distasteful. Maybe they like the idea of having AI help polish their work, but can’t imagine allowing AI to produce a  first draft for them. 
+
+I think this variability in workflows across our community helps to motivate a modular building strategy. Having a set of agents, small models,customized prompts and so on, that can be easily plugged into one another when desired or used as standalone tools. This provides a thorough toolkit without forcing anyone to adopt functionality they don’t want. 
+
+This modular approach would also allow individuals and organizations to pick up individual pieces and alter them for their own workflows. Maybe one org loves everything about the pipeline but the editing stage doesn’t match their preferred tone. In a modular system they could tweak just that piece and plug it back in without a problem.
+
+As a representative example of a modular build: one of the key elements of the Translation Agent is its Review tool. This provides the model the ability to produce a translation then evaluate the quality and if it’s not above our quality threshold it can use that feedback to provide an updated translation. 
+
+That Review tool can be easily swapped out for any other means of conveying a measure of translation quality. The “Review tool” could be an LLM call, it could be a small locally hosted model, or it could be a human who is monitoring drafted outputs as they come through. How we arrived at the current tool was a big chunk of the second session.
+
+
+### Translation Quality Evaluation
+
+#### Automated Translation Quality Evaluation - A Quantitative View
+
+This work gets pretty technical but I want to give a high-level overview here so that folks who are interested can get a sense of what’s going on here. The slides from the presentation are linked in the relevant sections below.
+
+Computer scientists have been working on machine translation since before “artificial intelligence” was a recognized phrase. Accordingly, how to evaluate translation quality has been an important element of this work for quite some time. Traditionally, evaluation metrics have relied on an existing gold-standard translation to compare the machine output to. For working translators, that’s not terribly useful. After all, if our point of comparison is an existing translation that we’re already happy with, it’s not clear what we’re trying to accomplish at all.
+
+Instead, we need a “reference-free” metric. This can be done for many languages with a metric known as COMET. COMET is a small AI model that takes in a text and its translation gives a score for how good that translation is. Unfortunately, it does not work reliably for Tibetan. 
+
+Recently, researchers have had significant success asking LLMs to rate translation quality, and at least a couple LLMs are reasonably good with Tibetan, so that seemed like a good path forward.
+
+At KVP we collected samples of human evaluation of translations from some of our translators and tested several evaluation methods to see which one agreed most closely with the human assessments. The winner was the LLM method using Gemini. [The slides  from this portion can be found here.]
+
+Gemini’s outputs were then made more consistent and more reliable by optimizing the prompt, as well as altering things like the model temperature, the amount of “thinking”, the number of times we prompt the model, etc. This process brings Gemini into a level of agreement with human assessments that rivals the level agreement between human evaluators. [The slides  from this portion can be found here.]
+
+Once Gemini had been dialed in, we then used Gemini to produce a larger set of example evaluations and we were able to use that as training data to finetune a much smaller model that can be run on low-cost hardware like a laptop. On a 5-point scale (“Rate this translation on a scale of 1-5”) this small model is within 1 point of human assessments 80% of the time. This is less accurate than Gemini, but also much less expensive to run. There are trade-offs in model size. [The slides  from this portion can be found here.]
+
+#### A Broader Discussion
+
+The quantitative work above reflects one goal of quality evaluation. This Review tool plays a particular role in the Translation Agent, but is also useful for flagging potentially problematic passages in a drafted translation so that human evaluators can get a sense of which portions of a text need the most attention.
+
+What this tool does not do is point out when the passive voice has been used inappropriately, or when translation uses the Tibetan term Khandro where an organizational style guide suggests the Sanskrit term Dakini would be preferred (with or without diacritics?). 
+
+Because KVP splits these types of review into multiple pieces, it is valuable to have these as separate tools, even outside of any questions about what sorts of things might be valuable to an agent. Additionally, a more high-level review focusing on terminology or style may overlook that the fundamentals of the translation have made a mistake (e.g. a negative modifier has been overlooked) and a quick (cheap) pass to make sure that there’s nothing severe being missed could be a valuable addition to that.
+
+At KVP, though, that high level work is handled by our Editor Agent. This allows translation review in the Translation agent as well as flagging of problematic passages for review within the Translation Team, without muddying their work with concerns that are more appropriate for the Editorial Team. The Editor agent can then assist in the Editorial Teams domain of expertise in a separate phase.
+
+For translators or organizations where this multi-phase workflow is not their usual way of doing things, collapsing this functionality into a single end-to-end approach may better serve their goals. Alternatively, using just one or the other of these two tools: the numerical scoring, or the high-level corrections; may be more in accordance with what they are looking for.
+
+Again, this points to the value of modularity and a certain sort of pluralism in the way that we are building tools. I don’t think that it is the place of the engineer or data scientist to impose notions of translation quality, nor are we likely to arrive at a single consensus opinion on what makes a good translation and what sort of quality decisions we are comfortable handing off to an AI. Thus, we should be looking for ways to design evaluation methods that can complement one another and be used one-at-a-time or as an ensemble.
+
+### Garchen Archive
+
+Parallel to all of this, I also presented some of how AI is being used in the Garchen Archive. [You can see the slides from this presentation here.]
+
+This is exciting work to me because it’s a place where we are actively working to archive and disseminate the living tradition. This comes with some interesting challenges: working with video and audio of varying qualities; working with a speaker with a unique accent whose voice has changed over time; and working with a set of data that is actively growing as Garchen Rinpoche continues to deliver public teachings.
+
+This work includes: automatic speech recognition to transcribe not just Garchen Rinpoche, but also his interpreters in various languages (each with their own accents); machine translation to produce translations into languages that don’t have interpreters or when live interpretation isn’t ideal for the archive; produced synthesized speech that can accurately pronounce dharma terms to make text transcripts accessible to students who might struggle to read captions or transcripts.
+
+This is also a great case-study in rigorous quality control as each of these phases goes through human review and editing; and how that provides continuous improvement to a system. The AI drafts provide a starting point for human editors, and the human edited content becomes training data for the AI, which in term produces better drafted starting points in a virtuous cycle.
+
+
 ## Reflection on the Opening Session
 
 ### Can AI do Dharma?
